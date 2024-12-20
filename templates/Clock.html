@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="2"> <!-- 2초마다 새로고침 -->
+    <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+    <title>시계</title>
+    <style>
+		body {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			font-family: Arial, sans-serif;
+			background: linear-gradient(to right, #232526, #414345);
+			color: #ffffff;
+		}
+		
+        .clock {
+            font-size: 60px;
+            font-weight: bold;
+			background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+			text-align: center;
+        }
+		
+		#digitalDate {
+            font-size: 30px;
+		}
+    </style>
+</head>
+<body>
+	<div class="clock">
+		<div id="digitalDate"></div>
+		<div id="digitalClock"></div>
+	</div>
+
+    <script>
+        function updateClock() {
+			const daysFormat = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+            const now = new Date();
+			const years = now.getFullYear().toString();
+			const months = (now.getMonth()+1).toString();
+			const dates = now.getDate().toString();
+			const days = now.getDay();
+            const hours = now.getHours().toString().padStart(2, '0'); // 두 자리로 표시
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+
+            // 시간, 분, 초를 'HH:MM:SS' 형식으로 표시
+            document.getElementById('digitalDate').textContent = `${years}년 ${months}월 ${dates}일 ${daysFormat[days]}`;
+            document.getElementById('digitalClock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // 시계 업데이트 인터벌 설정
+        setInterval(updateClock, 1000);
+
+        // 초기 시계 설정
+        updateClock();
+
+        // 서버와 WebSocket 연결
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // 서버에서 'reload_page' 이벤트를 수신하면 페이지를 새로 고침
+        socket.on('reload_page', function() {
+            location.reload();
+        });
+    </script>
+</body>
+</html>
+
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="ko"> -->
+<!-- <head> -->
+    <!-- <meta charset="UTF-8"> -->
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <!-- <title>간단한 시계</title> -->
+    <!-- <style> -->
+        <!-- body { -->
+            <!-- display: flex; -->
+            <!-- justify-content: center; -->
+            <!-- align-items: center; -->
+            <!-- height: 100vh; -->
+            <!-- margin: 0; -->
+            <!-- background-color: #f4f4f4; -->
+            <!-- font-family: 'Arial', sans-serif; -->
+        <!-- } -->
+
+        <!-- .clock { -->
+            <!-- width: 200px; -->
+            <!-- height: 200px; -->
+            <!-- border: 10px solid #333; -->
+            <!-- border-radius: 50%; -->
+            <!-- position: relative; -->
+            <!-- background-color: #fff; -->
+            <!-- box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); -->
+        <!-- } -->
+
+        <!-- .clock .hand { -->
+            <!-- position: absolute; -->
+            <!-- width: 50%; -->
+            <!-- background-color: #333; -->
+            <!-- top: 50%; -->
+            <!-- transform-origin: 100%; -->
+            <!-- transform: translateY(-50%); -->
+            <!-- transition-timing-function: steps(1); -->
+        <!-- } -->
+
+        <!-- .clock .hour { -->
+            <!-- height: 6px; -->
+            <!-- background-color: #000; -->
+            <!-- z-index: 3; -->
+        <!-- } -->
+
+        <!-- .clock .minute { -->
+            <!-- height: 4px; -->
+            <!-- background-color: #666; -->
+            <!-- z-index: 2; -->
+        <!-- } -->
+
+        <!-- .clock .second { -->
+            <!-- height: 2px; -->
+            <!-- background-color: red; -->
+            <!-- z-index: 1; -->
+        <!-- } -->
+
+        <!-- .clock .center { -->
+            <!-- position: absolute; -->
+            <!-- top: 50%; -->
+            <!-- left: 50%; -->
+            <!-- width: 12px; -->
+            <!-- height: 12px; -->
+            <!-- background-color: #333; -->
+            <!-- border-radius: 50%; -->
+            <!-- transform: translate(-50%, -50%); -->
+        <!-- } -->
+
+    <!-- </style> -->
+<!-- </head> -->
+<!-- <body> -->
+    <!-- <div class="clock"> -->
+        <!-- <div class="hand hour" id="hour"></div> -->
+        <!-- <div class="hand minute" id="minute"></div> -->
+        <!-- <div class="hand second" id="second"></div> -->
+        <!-- <div class="center"></div> -->
+    <!-- </div> -->
+
+    <!-- <script> -->
+        <!-- function updateClock() { -->
+            <!-- const now = new Date(); -->
+            <!-- const hours = now.getHours(); -->
+            <!-- const minutes = now.getMinutes(); -->
+            <!-- const seconds = now.getSeconds(); -->
+            <!-- const milliseconds = now.getMilliseconds(); -->
+
+            <!-- // 시침, 분침, 초침 각도 계산 -->
+            <!-- const hourAngle = (360 / 12) * (hours % 12) + (360 / 12) * (minutes / 60); -->
+            <!-- const minuteAngle = (360 / 60) * minutes + (360 / 60) * (seconds / 60); -->
+            <!-- const secondAngle = (360 / 60) * seconds + (360 / 60) * (milliseconds / 1000); -->
+
+            <!-- // 시침, 분침, 초침에 각도 적용 -->
+            <!-- document.getElementById('hour').style.transform = `translateY(-50%) rotate(${hourAngle}deg)`; -->
+            <!-- document.getElementById('minute').style.transform = `translateY(-50%) rotate(${minuteAngle}deg)`; -->
+            <!-- document.getElementById('second').style.transform = `translateY(-50%) rotate(${secondAngle}deg)`; -->
+        <!-- } -->
+
+        <!-- // 시계 업데이트 인터벌 설정 -->
+        <!-- setInterval(updateClock, 1000); -->
+
+        <!-- // 초기 시계 설정 -->
+        <!-- updateClock(); -->
+    <!-- </script> -->
+<!-- </body> -->
+<!-- </html> -->

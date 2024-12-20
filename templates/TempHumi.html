@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<meta http-equiv="refresh" content="2"> <!-- 2초마다 새로고침 -->
+    <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+    <title>온습도</title>
+    <style>
+		body {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			font-family: Arial, sans-serif;
+			background: linear-gradient(to right, #232526, #414345);
+			color: #ffffff;
+            transform: rotate(270deg);
+            transform-origin: center;
+		}
+        .container {
+            font-size: 40px;
+            font-weight: bold;
+			background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+			text-align: left;
+        }
+
+        .data-div{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="data-div" id="temp">
+            <div class="label">온도 : {{ data['temp'] }} °C</div>
+        </div>
+
+        <div class="data-div" id="humi">
+            <div class="label">습도 : {{ data['humi'] }} %</div>
+        </div>
+    </div>
+
+    <script>
+        // 서버와 WebSocket 연결
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // 서버에서 'reload_page' 이벤트를 수신하면 페이지를 새로 고침
+        socket.on('reload_page', function() {
+            location.reload();
+        });
+    </script>
+</body>
+</html>

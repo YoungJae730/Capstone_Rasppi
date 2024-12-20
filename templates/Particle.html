@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<meta http-equiv="refresh" content="2"> <!-- 2초마다 새로고침 -->
+    <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+    <title>미세먼지</title>
+    <style>
+        @font-face {
+            font-family: 'yg-jalnan';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_four@1.2/JalnanOTF00.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+		body {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			font-family: Arial, sans-serif;
+			background: linear-gradient(to right, #232526, #414345);
+			color: #ffffff;
+            transform: rotate(90deg);
+            transform-origin: center;
+		}
+
+        .container {
+            font-size: 30px;
+            font-weight: bold;
+			background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+			text-align: center;
+        }
+
+        .data-div{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status{
+            margin: 10px;
+            padding: 4px;
+            font-size: 15px;
+            border-radius: 10px;
+            font-family: 'yg-jalnan';
+        }
+
+        .good { color: black; background: green;}
+        .moderate { color: black; background: yellow;}
+        .bad { color: black; background: orange;}
+        .verybad { color: black; background: red;}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="data-div" id="pm25">
+            <div class="label">PM 2.5 : {{ data['pm25'] }} µg/m³</div>
+            <div id="pm25_status" class="status good">좋음</div>
+        </div>
+
+        <div class="data-div" id="pm100">
+            <div class="label">PM 10 : {{ data['pm100'] }} µg/m³</div>
+            <div id="pm100_status" class="status good">좋음</div>
+        </div>
+    </div>
+    <script>
+        // PM 상태에 따라 색상과 텍스트를 업데이트하는 함수
+        function updateStatus(pmType, pmValue) {
+            let statusElement = document.getElementById(pmType + '_status');
+            let statusText = '';
+            let statusClass = '';
+
+            if (pmType === 'pm25') {
+                if (pmValue <= 15) {
+                    statusText = '좋음';
+                    statusClass = 'good';
+                } else if (pmValue <= 35) {
+                    statusText = '보통';
+                    statusClass = 'moderate';
+                } else if (pmValue <= 75) {
+                    statusText = '나쁨';
+                    statusClass = 'bad';
+                } else {
+                    statusText = '매우 나쁨';
+                    statusClass = 'verybad';
+                }
+            } else if (pmType === 'pm100') {
+                if (pmValue <= 30) {
+                    statusText = '좋음';
+                    statusClass = 'good';
+                } else if (pmValue <= 80) {
+                    statusText = '보통';
+                    statusClass = 'moderate';
+                } else if (pmValue <= 150) {
+                    statusText = '나쁨';
+                    statusClass = 'bad';
+                } else {
+                    statusText = '매우 나쁨';
+                    statusClass = 'verybad';
+                }
+            }
+
+            // 상태 업데이트
+            statusElement.innerText = statusText;
+            statusElement.className = "status " + statusClass;
+        }
+
+        // 페이지 로드 후 상태 업데이트
+        window.onload = function() {
+            // Flask에서 템플릿으로 전달된 값 사용
+            let pm25Value = {{ data['pm25'] }};
+            let pm100Value = {{ data['pm100'] }};
+
+            // 각 PM 값에 대해 상태 업데이트
+            updateStatus('pm25', pm25Value);
+            updateStatus('pm100', pm100Value);
+        };
+
+        // 서버와 WebSocket 연결
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // 서버에서 'reload_page' 이벤트를 수신하면 페이지를 새로 고침
+        socket.on('reload_page', function() {
+            location.reload();
+        });
+    </script>
+</body>
+</html>

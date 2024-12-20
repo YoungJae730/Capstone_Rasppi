@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+    <title>타이머</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #232526, #414345);
+            color: #ffffff;
+            transform: rotate(180deg);
+            transform-origin: center;
+        }
+
+        .timer-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            margin: 20px 0;
+            color: #ffcc00;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        button {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: #ffffff;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .time {
+            font-size: 60px;
+            font-weight: bold;
+            margin: 20px;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+        }
+
+        button:active {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <div class="buttons">
+            <button id="decrease">-</button>
+            <div class="time" id="time">0:00</div>
+            <button id="increase">+</button>
+        </div>
+        <div class="control-buttons">
+            <button id="reset">리셋</button>
+            <button id="start">시작</button>
+            <button id="stop">중지</button>
+        </div>
+    </div>
+
+    <script>
+        let seconds = 0;
+        let timerInterval = null;
+        let intervalId = null; // for rapid increment/decrement
+
+        function updateTime() {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            document.getElementById('time').textContent = `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            clearInterval(intervalId); // clear rapid interval
+            timerInterval = null;
+            intervalId = null;
+        }
+
+        document.getElementById('increase').addEventListener('click', () => {
+            // 일반 클릭 시 1초씩 증가
+            seconds++;
+            updateTime();
+        });
+
+        document.getElementById('increase').addEventListener('mousedown', () => {
+            // 눌렀을 때 빠르게 증가
+            intervalId = setInterval(() => {
+                seconds++;
+                updateTime();
+            }, 100); // Increase every 100 ms
+        });
+
+        document.getElementById('increase').addEventListener('mouseup', () => {
+            clearInterval(intervalId); // Stop when mouse is released
+        });
+
+        document.getElementById('increase').addEventListener('mouseleave', () => {
+            clearInterval(intervalId); // Stop if the mouse leaves the button
+        });
+
+        document.getElementById('decrease').addEventListener('click', () => {
+            // 일반 클릭 시 1초씩 감소
+            if (seconds > 0) {
+                seconds--;
+                updateTime();
+            }
+        });
+
+        document.getElementById('decrease').addEventListener('mousedown', () => {
+            // 눌렀을 때 빠르게 감소
+            intervalId = setInterval(() => {
+                if (seconds > 0) {
+                    seconds--;
+                    updateTime();
+                }
+            }, 100); // Decrease every 100 ms
+        });
+
+        document.getElementById('decrease').addEventListener('mouseup', () => {
+            clearInterval(intervalId); // Stop when mouse is released
+        });
+
+        document.getElementById('decrease').addEventListener('mouseleave', () => {
+            clearInterval(intervalId); // Stop if the mouse leaves the button
+        });
+
+        document.getElementById('start').addEventListener('click', () => {
+            if (seconds == 0) return;
+            if (!timerInterval) {
+                timerInterval = setInterval(() => {
+                    if (seconds > 0) {
+                        seconds--;
+                        updateTime();
+                    } else {
+                        fetch('/finishTimer', { method: 'POST' }).catch(error => {});
+                        stopTimer();
+                    }
+                }, 1000);
+            }
+        });
+
+        document.getElementById('stop').addEventListener('click', stopTimer);
+
+        document.getElementById('reset').addEventListener('click', () => {
+            stopTimer();
+            seconds = 0;
+            updateTime();
+        });
+
+        updateTime();
+
+        // 서버와 WebSocket 연결
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // 서버에서 'reload_page' 이벤트를 수신하면 페이지를 새로 고침
+        socket.on('reload_page', function() {
+            location.reload();
+        });
+    </script>
+</body>
+</html>
