@@ -8,7 +8,10 @@ from PMS7003 import PMS7003
 import serial
 import board
 import threading
-import random
+import RPi.GPIO as GPIO
+
+# 부저 핀 번호
+buzzer = 18
 
 # MPU6050 레지스터 주소
 MPU6050_ADDR = 0x69
@@ -238,8 +241,21 @@ def display_face():
 
 @app.route('/finishTimer', methods=['POST'])
 def finish_timer():
-    print("타이머 종료")  # 부저 실행 코드 삽입
-    return jsonify({"message": "Timer finished successfully!"}), 200
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(buzzer, GPIO.OUT)
+    GPIO.setwarnings(False)
+    
+    pwm = GPIO.PWM(buzzer, 1024)
+    pwm.start(100.0)
+    time.sleep(1.5)
+    pwm.stop()
+    time.sleep(0.75)
+    pwm.start(100.0)
+    time.sleep(1.5)
+    pwm.stop()
+    
+    GPIO.cleanup()
+    return jsonify({"message": "Timer finish"}), 200
 
 
 @socketio.on('connect')
