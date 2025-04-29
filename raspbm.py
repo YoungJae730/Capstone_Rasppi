@@ -239,7 +239,7 @@ def display_face():
     return render_template(face_template[current_eye] + '.html', data=data)
 
 
-@app.route('/finishTimer', methods=['POST'])
+@socketio.on('finishTimer')
 def finish_timer():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(buzzer, GPIO.OUT)
@@ -255,7 +255,6 @@ def finish_timer():
     pwm.stop()
     
     GPIO.cleanup()
-    return jsonify({"message": "Timer finish"}), 200
 
 
 @socketio.on('connect')

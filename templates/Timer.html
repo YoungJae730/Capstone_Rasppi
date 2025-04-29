@@ -160,7 +160,7 @@
                         seconds--;
                         updateTime();
                     } else {
-                        fetch('/finishTimer', { method: 'POST' }).catch(error => {});
+						socket.emit('finishTimer');
                         stopTimer();
                     }
                 }, 1000);
